@@ -1,0 +1,32 @@
+{
+  "identifier": "ctx:user:don",
+  "traits": [
+    {
+      "id": null,
+      "trait_key": "role",
+      "trait_value": "admin",
+      "transient": true
+    }
+  ],
+  "flags": [
+    {
+      "id": 1,
+      "feature": {
+        "id": 1,
+        "name": "sso_login",
+        "created_date": "2026-11-22T17:35:08.887340Z",
+        "description": null,
+        "initial_value": null,
+        "default_enabled": false,
+        "type": "STANDARD"
+      },
+      "feature_state_value": null,
+      "environment": 1,
+      "identity": null,
+      "feature_segment": null,
+      "enabled": false,
+      "reason": "DEFAULT",
+      "variant": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "identifier": "ctx:org:acme_corp",
+  "traits": [
+    {
+      "id": null,
+      "trait_key": "plan",
+      "trait_value": "enterprise",
+      "transient": true
+    }
+  ],
+  "flags": [
+    {
+      "id": 3,
+      "feature": {
+        "id": 1,
+        "name": "sso_login",
+        "created_date": "2026-11-22T17:35:08.887340Z",
+        "description": null,
+        "initial_value": null,
+        "default_enabled": false,
+        "type": "STANDARD"
+      },
+      "feature_state_value": null,
+      "environment": 1,
+      "identity": null,
+      "feature_segment": 1,
+      "enabled": true,
+      "reason": "TARGETING_MATCH; segment=enterprise_plan",
+      "variant": null
+    }
+  ]
+}
