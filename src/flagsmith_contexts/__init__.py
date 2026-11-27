@@ -15,11 +15,14 @@ from .schemas import (
     TrackEventResponse,
     WebhookResponse,
 )
+from .merger import HierarchicalMerger, parse_sdk_flags
 
 __version__ = "0.1.0"
 
 __all__ = [
     "CacheBackend",
+    "HierarchicalMerger",
+    "parse_sdk_flags",
     "ContextLayer",
     "EvaluateRequest",
     "EvaluateResponse",
