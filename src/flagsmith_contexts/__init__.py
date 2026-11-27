@@ -16,11 +16,13 @@ from .schemas import (
     WebhookResponse,
 )
 from .merger import HierarchicalMerger, parse_sdk_flags
+from .client import ContextFlagsmith
 
 __version__ = "0.1.0"
 
 __all__ = [
     "CacheBackend",
+    "ContextFlagsmith",
     "HierarchicalMerger",
     "parse_sdk_flags",
     "ContextLayer",
