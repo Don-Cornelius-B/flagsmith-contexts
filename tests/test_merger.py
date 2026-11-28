@@ -221,6 +221,44 @@ def test_bucketing_split_reason_without_variant_and_non_experiment_untouched():
     assert (out["plain"].resolved_by, out["plain"].experiment_bucketed_by) == ("user:u", None)
 
 
+def test_bucketing_pins_org_in_control_group_over_split_users():
+    # Flagsmith reports the control bucket as STATIC with no variant, so the org
+    # snapshot alone doesn't look like an experiment; the users' SPLIT does.
+    base = snap("env", onboarding=RawFlagState(enabled=True, value="classic", reason="STATIC"))
+    org_control = RawFlagState(enabled=True, value="classic", reason="STATIC")
+    outcomes = []
+    for user_id in ("alice", "bob"):
+        req = EvaluateRequest(
+            contexts=layers(("org", "acme_corp"), ("user", user_id)),
+            bucketing_context="org",
+        )
+        snaps = {
+            ns("org", "acme_corp"): snap("o", onboarding=org_control),
+            ns("user", user_id): snap(
+                "u",
+                onboarding=RawFlagState(enabled=True, value="guided_ai", reason="SPLIT; weight=50.0"),
+            ),
+        }
+        outcomes.append(merger.resolve(req, base, snaps)["onboarding"])
+    for r in outcomes:
+        assert (r.enabled, r.value, r.reason) == (True, "classic", "STATIC")
+        assert r.resolved_by == "org:acme_corp"
+        assert r.experiment_bucketed_by == "org:acme_corp"
+
+
+def test_control_group_not_pinned_without_bucketing_context():
+    base = snap("env", onboarding=RawFlagState(enabled=True, value="classic", reason="STATIC"))
+    req = EvaluateRequest(contexts=layers(("org", "acme_corp"), ("user", "alice")))
+    snaps = {
+        ns("org", "acme_corp"): snap("o", onboarding=RawFlagState(enabled=True, value="classic", reason="STATIC")),
+        ns("user", "alice"): snap(
+            "u", onboarding=RawFlagState(enabled=True, value="guided_ai", reason="SPLIT; weight=50.0")
+        ),
+    }
+    r = merger.resolve(req, base, snaps)["onboarding"]
+    assert (r.value, r.resolved_by, r.experiment_bucketed_by) == ("guided_ai", "user:alice", None)
+
+
 # --- No baseline / include_baseline=False --------------------------------------
 
 

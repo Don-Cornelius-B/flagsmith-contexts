@@ -120,7 +120,7 @@ class HierarchicalMerger:
             results[name] = current
 
         if request.bucketing_context is not None:
-            self._apply_bucketing(request, layer_snapshots, results)
+            self._apply_bucketing(request, base, layers, results)
         return results
 
     @staticmethod
@@ -150,20 +150,39 @@ class HierarchicalMerger:
     @staticmethod
     def _apply_bucketing(
         request: EvaluateRequest,
-        layer_snapshots: dict[str, LayerSnapshot],
+        base: LayerSnapshot | None,
+        layers: list[tuple[ContextLayer, LayerSnapshot]],
         results: dict[str, FlagEvaluation],
     ) -> None:
-        bucket_layer = next(
-            (c for c in request.contexts if c.kind == request.bucketing_context), None
+        """Pin experiment flags to the bucketing layer's assignment.
+
+        A feature counts as an experiment if *any* evaluated snapshot (baseline
+        or any context layer) reports a variant or a SPLIT reason. This matters
+        because Flagsmith reports the control bucket as plain ``STATIC`` with no
+        variant, so the bucketing layer alone can't reveal it's in an experiment.
+        """
+        bucket = next(
+            ((layer, snap) for layer, snap in layers if layer.kind == request.bucketing_context),
+            None,
         )
-        if bucket_layer is None:
+        if bucket is None:
             return
-        snap = layer_snapshots.get(bucket_layer.namespaced_id)
-        if snap is None:
-            return
+        bucket_layer, bucket_snap = bucket
+
+        snapshots = [snap for _, snap in layers]
+        if base is not None:
+            snapshots.append(base)
+        experiments = {
+            name
+            for snap in snapshots
+            for name, flag in snap.flags.items()
+            if _is_experiment(flag)
+        }
+
         ident = _ident(bucket_layer)
-        for name, flag in snap.flags.items():
-            if _is_experiment(flag):
+        for name in sorted(experiments):
+            flag = bucket_snap.flags.get(name)
+            if flag is not None:
                 results[name] = FlagEvaluation(
                     enabled=flag.enabled,
                     value=flag.value,
