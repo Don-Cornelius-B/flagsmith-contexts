@@ -276,3 +276,28 @@ def test_webhook_without_secret():
     )
 
     assert response.status_code == 503
+
+
+def test_create_app_from_env_wires_context_engine(monkeypatch):
+    from flagsmith_contexts import ContextFlagsmith
+    from flagsmith_contexts import server
+
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    monkeypatch.setenv("FLAGSMITH_ENV_KEY", "test-env-key")
+    monkeypatch.setenv("FLAGSMITH_API_URL", "http://flagsmith.invalid/api/v1/")
+    monkeypatch.setenv("FLAGSMITH_WEBHOOK_SECRET", "s3cret")
+
+    app = server.create_app_from_env()
+    assert isinstance(app.state.context_engine, ContextFlagsmith)
+    assert app.state.cache is app.state.context_engine.cache
+    assert app.state.webhook_secret == "s3cret"
+    app.state.context_engine.sdk_client.close()
+
+
+def test_create_app_from_env_requires_env_key(monkeypatch):
+    from flagsmith_contexts import server
+
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    monkeypatch.delenv("FLAGSMITH_ENV_KEY", raising=False)
+    with pytest.raises(RuntimeError):
+        server.create_app_from_env()

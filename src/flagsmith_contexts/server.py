@@ -195,4 +195,32 @@ def create_app(
     return app
 
 
+def create_app_from_env() -> FastAPI:
+    """Build a fully wired sidecar from environment variables (and `.env`).
+
+    Reads FLAGSMITH_ENV_KEY (required), FLAGSMITH_API_URL and
+    FLAGSMITH_WEBHOOK_SECRET. Intended for:
+        uvicorn --factory flagsmith_contexts.server:create_app_from_env
+    """
+
+    from dotenv import load_dotenv
+
+    from .client import ContextFlagsmith
+
+    load_dotenv()
+    env_key = os.getenv("FLAGSMITH_ENV_KEY")
+    if not env_key:
+        raise RuntimeError("FLAGSMITH_ENV_KEY must be set to start the sidecar")
+
+    client = ContextFlagsmith(
+        env_key,
+        api_url=os.getenv("FLAGSMITH_API_URL") or "http://localhost:8000/api/v1/",
+    )
+    return create_app(
+        engine=client,
+        cache=client.cache,
+        webhook_secret=os.getenv("FLAGSMITH_WEBHOOK_SECRET"),
+    )
+
+
 app = create_app()
