@@ -128,14 +128,9 @@ def create_app(
         context_engine: ContextEngine = Depends(get_engine),
     ):
         try:
-            context_engine.track_context_event(payload)
+            return context_engine.track_context_event(payload)
 
-            return TrackEventResponse(
-                status="tracked",
-                attributed_to=payload.bucketing_context or "unknown",
-                event_name=payload.event_name,
-            )
-
+            
         except HTTPException:
             raise
 

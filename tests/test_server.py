@@ -10,6 +10,7 @@ from flagsmith_contexts.schemas import (
     EvaluateResponse,
     EvaluationMeta,
     FlagEvaluation,
+    TrackEventResponse,
 )
 
 
@@ -49,6 +50,23 @@ class MockContextEngine:
 
         if self.should_fail:
             raise RuntimeError("Event tracking failed")
+
+        target = next(
+            (
+                context
+                for context in request.contexts
+                if context.kind == request.bucketing_context
+            ),
+            None,
+        )
+
+        return TrackEventResponse(
+            status="tracked",
+            attributed_to=(
+                f"{target.kind}:{target.id}" if target else "unknown"
+            ),
+            event_name=request.event_name,
+        )
 
 
 class MockCache:
@@ -171,6 +189,7 @@ def test_event_tracking_endpoint(setup_client):
     assert engine.event_called is True
     assert response.json()["status"] == "tracked"
     assert response.json()["event_name"] == "purchase_completed"
+    assert response.json()["attributed_to"] == "org:acme_corp"
 
 
 def test_event_tracking_handles_failure(setup_client):
