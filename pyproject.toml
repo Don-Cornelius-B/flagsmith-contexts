@@ -30,5 +30,5 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "integration: tests that require a live Flagsmith server",
+    "integration: live Flagsmith server tests",
 ]

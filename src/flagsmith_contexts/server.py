@@ -184,11 +184,12 @@ def create_app(
             )
 
         # Clear cached evaluations after a valid webhook.
+        purged_keys = getattr(cache_backend, "entry_count", 0)
         cache_backend.clear()
 
         return WebhookResponse(
             status="invalidated",
-            purged_keys=0,
+            purged_keys=purged_keys,
         )
 
     return app

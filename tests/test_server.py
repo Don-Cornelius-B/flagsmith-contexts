@@ -244,6 +244,7 @@ def test_webhook_clears_cache(setup_client):
 
     assert response.status_code == 200
     assert response.json()["status"] == "invalidated"
+    assert response.json()["purged_keys"] == 3
     assert cache.cleared is True
 
 
